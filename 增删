@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/3.3.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            width: 800px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app"></div>
+
+
+    <script>
+        const UserAddComponent = {
+            props: ["users"],
+            data() {
+                //添加页面表单初始化没有值
+                //此处定义data是为了接收表单值
+                return {
+                    uid: '',
+                    name: '',
+                    aname: '',
+                    fen: '',
+                    question: '',
+                    fenn: '',
+                    state: '',
+                }
+            },
+            methods: {
+                add() {
+                    //组装一条用户记录
+                    const userRec = {
+                        uid: this.uid,
+                        name: this.name,
+                        aname: this.aname,
+                        fen: this.fen,
+                        question: this.question,
+                        fenn: this.fenn,
+                        state: this.state,
+                    }
+                    //放入数据集合中
+                    this.users.unshift(userRec);
+                    //切换到列表页
+                    this.$emit('show', 'list');
+                }
+            },
+        },
+            UserEditComponent = {
+                props: ["users", "uid"],
+                data() {
+                    //由uid查找对应的用户记录
+                    let pos = this.users.findIndex(item => {
+                        return item.uid == this.uid
+                    });
+                    const userRec = this.users[pos];
+                    return {
+                        // "userRec" : userRec
+                        userRec,
+                    }
+                },
+                methods: {
+                    update() {
+
+                        //查找该uid在数据集合中的位置
+                        let pos = this.users.findIndex(item => {
+                            return item.uid == this.uid;
+                        });
+
+                        //修改该位置的用户记录为一个新的数据值
+                        //这个是双向绑定之后用户输入的新值
+                        // console.log(this.userRec);
+                        this.users[pos] = this.userRec;
+
+                        //切换视图，修改根实例act为list
+                        this.$emit('show', 'list');
+                    }
+                },
+                template: `<form>
+                    <div class="form-group">
+                        <label for="userid">第几题：</label>
+                        <input type="number" class="form-control" id="userid"
+                        v-model="userRec.uid" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">试题类型：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入多选或单选题" v-model="userRec.name">
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">标题：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入" v-model="userRec.aname">
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">试题分数：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入" v-model="userRec.fen">
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">是否有半对：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入" v-model="userRec.question">
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">半对得分：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入半对得分" v-model="userRec.fenn">
+                    </div>
+                    <div class="form-group">
+                        <label for="uname">状态：</label>
+                        <input type="text" class="form-control" id="uname" placeholder="请输入有无效" v-model="userRec.state">
+                    </div>
+                    <button type="submit" class="btn btn-success" 
+                        @click.prevent="update">立即修改</button>
+                    <button class="btn btn-default" 
+                        @click="$emit('show', 'list')">返回列表</button>
+                </form>`,
+            },
+            UserListComponent = {
+                props: ["users"],
+                methods: {
+                    del(uid) {
+                        //根据用户编号找到该记录在数组中的位置
+                        //使用findIndex方法，它需要传入一个回调函数作为查找条件
+                        //返回满足条件的第一个元素对应的编号
+                        let pos = this.users.findIndex((item, index) => {
+                            return item.uid == uid;
+                        });
+                        //删除数组中对应编号的记录
+                        this.users.splice(pos, 1); //变异方法
+                    }
+                },
+                template: `<table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>第几题</th>
+                        <th>试题类型</th>
+                        <th>标题</th>
+                        <th>试题分数</th>
+                        <th>是否有半对</th>
+                        <th>半对得分</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in users">
+                        <th scope="row">{{ item.uid }}</th>
+                        <td> {{ item.name }}</td>
+                        <td> {{ item.aname }}</td>
+                        <td> {{ item.fen }}</td>
+                        <td> {{ item.question }}</td>         
+                        <td> {{ item.fenn }}</td>
+                        <td> {{ item.state }}</td>
+
+                        <td>
+                            <a href="" @click.prevent="$emit('show', 'edit', item.uid)">编辑</a>
+                            <a href="" @click.prevent="del(item.uid)">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>`,
+            };
+
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                //act控制显示视图的参数
+                //修改act值来切换不同的视图
+                act: 'list',
+                uid: null,
+                //初始化的用户数据
+                users: [{
+                    uid: 1,
+                    name: "多选题",
+                    aname: "以下正确的有?",
+                    fen: 5,
+                    question: "是",
+                    fenn:3,
+                    state: "有效"
+                },
+                {
+                    uid: 2,
+                    name: "单选题",
+                    aname: "以下算术式正确的是",
+                    fen: 5,
+                    question: "是",
+                    fenn:3,
+                    state: "有效"
+                    
+                },
+            ]
+            },
+
+            computed: {
+                currentComponent() {
+                    return 'user-' + this.act;
+                }
+            },
+
+            methods: {
+                //第一个参数控制视图的act，
+                //剩余参数是跳转链接
+                show(act, uid = null) {
+                    console.log(act);
+                    //修改act为传入的值
+                    this.act = act;
+                    //将参数写入data中 便于跨组件使用
+                    if (uid) this.uid = uid;
+                },
+            },
+
+            template: `<div class="container">
+                            <!-- 动态渲染的组件 -->
+                            <component 
+                                v-bind:is="currentComponent" 
+                                v-bind:users="users" 
+                                v-on:show="show" 
+                                v-bind:uid="uid">
+                            </component>
+                        </div>`,
+
+            components: {
+                //显示用户列表的组件（template视图、data数据、methods事件等）
+                'user-list': UserListComponent,
+                'user-edit': UserEditComponent,
+                // 'user-add': UserAddComponent,
+            },
+        });
+    </script>
+
+</body>
+
+</html>
